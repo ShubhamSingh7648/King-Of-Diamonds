@@ -7,8 +7,8 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: { 
-    origin: process.env.FRONTEND_URL || 'https://kings-of-diamond-frontend.vercel.app/', 
-    // origin: process.env.FRONTEND_URL || 'http://localhost:3000', 
+    // 👇 FIX: Frontend ka live Vercel URL yahan daalo
+    origin: process.env.FRONTEND_URL || 'https://kings-of-diamond-frontend.vercel.app', 
     methods: ["GET", "POST"] 
   }
 });
@@ -221,7 +221,6 @@ function calculateRoundResults(roomId) {
     if (!roomState) return;
 
     const submittedNumbers = Array.from(roomState.roundNumbers.values());
-    // Get submitted numbers with player IDs for display
     const submittedNumbersWithPlayers = Array.from(roomState.roundNumbers.entries()).map(([playerId, number]) => {
         const player = roomState.players.get(playerId);
         return {
@@ -229,7 +228,7 @@ function calculateRoundResults(roomId) {
             playerNumber: player ? player.playerNumber : 'N/A',
             isBot: player ? player.isBot : false,
             submittedNumber: number,
-            score: player ? player.score : 0 // Current score before update
+            score: player ? player.score : 0 
         };
     });
 
@@ -273,7 +272,7 @@ function calculateRoundResults(roomId) {
     endRound(roomId, winnerId, average, target, winningNumber, submittedNumbersWithPlayers);
 }
 
-function endRound(roomId, winnerId, average, target, winningNumber, submittedNumbersWithPlayers) { // submittedNumbersWithPlayers receive kiya
+function endRound(roomId, winnerId, average, target, winningNumber, submittedNumbersWithPlayers) { 
     const roomState = activeRooms.get(roomId);
     if (!roomState) return;
 
@@ -284,16 +283,14 @@ function endRound(roomId, winnerId, average, target, winningNumber, submittedNum
         winningNumber: winningNumber,
         updatedPlayers: Array.from(roomState.players.values()), 
         currentRound: roomState.currentRound,
-        submittedNumbers: submittedNumbersWithPlayers, // Naya: Submitted numbers bhi bhejo
+        submittedNumbers: submittedNumbersWithPlayers, 
     });
 
     checkGameEndConditions(roomId);
 
-    // Prepare for next round
     roomState.currentRound++;
     roomState.roundNumbers.clear(); 
 
-    // 👇 FIX: Next round start delay 10 seconds
     setTimeout(() => {
         if (roomState.players.size > 1) { 
             startRound(roomId);
@@ -302,7 +299,7 @@ function endRound(roomId, winnerId, average, target, winningNumber, submittedNum
             io.to(roomId).emit('game_over', { winner: Array.from(roomState.players.values())[0] });
             activeRooms.delete(roomId); 
         }
-    }, 10000); // 10 seconds pause
+    }, 10000); 
 }
 
 function checkGameEndConditions(roomId) {
